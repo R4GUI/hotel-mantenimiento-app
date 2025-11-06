@@ -1,0 +1,131 @@
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h2><i class="bi bi-wrench"></i> Equipos</h2>
+          <p class="text-muted">Gestión de equipos del hotel</p>
+        </div>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#equipoModal" (click)="abrirModal()">
+          <i class="bi bi-plus-lg"></i> Nuevo Equipo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>N° Serie</th>
+              <th>Área</th>
+              <th>Tipo</th>
+              <th>Marca</th>
+              <th>Modelo</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let equipo of equipos">
+              <td><strong>{{ equipo.numero_serie }}</strong></td>
+              <td>{{ equipo.nombre_area }}</td>
+              <td>{{ equipo.nombre_tipo }}</td>
+              <td>{{ equipo.marca || '-' }}</td>
+              <td>{{ equipo.modelo || '-' }}</td>
+              <td>
+                <span class="badge" [ngClass]="getBadgeClass(equipo.estado || '')">
+                  {{ equipo.estado }}
+                </span>
+              </td>
+              <td>
+                <button class="btn btn-sm btn-outline-primary me-1" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#equipoModal" 
+                        (click)="abrirModal(equipo)">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" 
+                        (click)="eliminarEquipo(equipo.id_equipo!)">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="equipos.length === 0">
+              <td colspan="7" class="text-center text-muted">No hay equipos registrados</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Crear/Editar Equipo (SIN CAMPO ESTADO) -->
+<div class="modal fade" id="equipoModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-wrench"></i> {{ modoEdicion ? 'Editar' : 'Nuevo' }} Equipo
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Número de Serie <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" [(ngModel)]="equipoSeleccionado.numero_serie" name="numero_serie" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Área <span class="text-danger">*</span></label>
+              <select class="form-select" [(ngModel)]="equipoSeleccionado.id_area" name="id_area" required>
+                <option value="0">Seleccione un área</option>
+                <option *ngFor="let area of areas" [value]="area.id_area">{{ area.nombre_area }}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Tipo de Equipo <span class="text-danger">*</span></label>
+              <select class="form-select" [(ngModel)]="equipoSeleccionado.id_tipo" name="id_tipo" required>
+                <option value="0">Seleccione un tipo</option>
+                <option *ngFor="let tipo of tipos" [value]="tipo.id_tipo">{{ tipo.nombre_tipo }}</option>
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Fecha de Adquisición</label>
+              <input type="date" class="form-control" [(ngModel)]="equipoSeleccionado.fecha_adquisicion" name="fecha_adquisicion">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Marca</label>
+              <input type="text" class="form-control" [(ngModel)]="equipoSeleccionado.marca" name="marca">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Modelo</label>
+              <input type="text" class="form-control" [(ngModel)]="equipoSeleccionado.modelo" name="modelo">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Observaciones</label>
+            <textarea class="form-control" rows="3" [(ngModel)]="equipoSeleccionado.observaciones" name="observaciones"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="guardarEquipo()">
+          <i class="bi bi-save"></i> Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

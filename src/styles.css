@@ -1,1 +1,59 @@
 /* You can add global styles to this file, and also import other style files */
+body {
+  background-color: #f8f9fa;
+}
+
+/* Estilos para Imprimir */
+@media print {
+  /* Ocultar todo excepto el modal de reporte */
+  body * {
+    visibility: hidden;
+  }
+  
+  /* Mostrar solo el contenido del reporte */
+  #reporteModal,
+  #reporteModal * {
+    visibility: visible;
+  }
+  
+  /* Posicionar el reporte en la esquina superior */
+  #reporteModal {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  
+  /* Ocultar el botón de cerrar y los botones del footer */
+  #reporteModal .btn-close,
+  #reporteModal .modal-header button,
+  #reporteModal .modal-footer {
+    display: none !important;
+  }
+  
+  /* Ocultar el fondo oscuro del modal */
+  .modal-backdrop {
+    display: none !important;
+  }
+  
+  /* Ajustar el tamaño del modal para impresión */
+  #reporteModal .modal-dialog {
+    max-width: 100%;
+    margin: 0;
+  }
+  
+  #reporteModal .modal-content {
+    border: none;
+    box-shadow: none;
+  }
+  
+  /* Asegurar que las tablas se vean bien */
+  table {
+    page-break-inside: auto;
+  }
+  
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+}

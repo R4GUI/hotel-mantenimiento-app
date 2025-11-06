@@ -1,0 +1,44 @@
+.card-hover {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.icon-box {
+  width: 70px;
+  height: 70px;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.list-group-item {
+  border-left: none;
+  border-right: none;
+  padding: 1rem;
+}
+
+.list-group-item:first-child {
+  border-top: none;
+}
+
+.list-group-item:last-child {
+  border-bottom: none;
+}
+
+h2 {
+  font-size: 2.5rem;
+}
+
+.card-footer a {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.progress {
+  border-radius: 10px;
+}

@@ -1,0 +1,470 @@
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h2><i class="bi bi-gear"></i> Mantenimiento</h2>
+          <p class="text-muted">Gestión de mantenimientos preventivos y correctivos</p>
+        </div>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#mantenimientoModal" (click)="abrirModal()">
+          <i class="bi bi-plus-lg"></i> Programar Mantenimiento
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Equipo</th>
+              <th>Área</th>
+              <th>Tipo</th>
+              <th>Fecha Programada</th>
+              <th>Responsable</th>
+              <th>Tipo Mant.</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let mant of mantenimientos">
+              <td>
+                <strong>{{ mant.numero_serie }}</strong>
+                <br>
+                <small class="text-muted">{{ mant.marca }} {{ mant.modelo }}</small>
+              </td>
+              <td>{{ mant.nombre_area }}</td>
+              <td>{{ mant.nombre_tipo }}</td>
+              <td>{{ mant.fecha_programada | date:'dd/MM/yyyy' }}</td>
+              <td>{{ mant.responsable }}</td>
+              <td>
+                <span class="badge" [ngClass]="getTipoBadgeClass(mant.tipo_mantenimiento || '')">
+                  {{ mant.tipo_mantenimiento }}
+                </span>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="getBadgeClass(mant.estado || '')">
+                  {{ mant.estado }}
+                </span>
+              </td>
+              <td>
+                <!-- Botón Editar - Solo si está Programado -->
+                <button class="btn btn-sm btn-outline-primary me-1" 
+                        *ngIf="mant.estado === 'Programado'"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#mantenimientoModal" 
+                        (click)="abrirModal(mant)"
+                        title="Editar">
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <!-- Botón Iniciar - Solo el día del mantenimiento y si está Programado -->
+                <button class="btn btn-sm btn-success me-1" 
+                        *ngIf="mant.estado === 'Programado' && esHoyElMantenimiento(mant.fecha_programada)"
+                        (click)="iniciarMantenimiento(mant)"
+                        title="Iniciar Mantenimiento">
+                  <i class="bi bi-play-circle"></i> Iniciar
+                </button>
+
+                <!-- Botón Refacciones - Solo si está En proceso -->
+                <button class="btn btn-sm btn-outline-info me-1" 
+                        *ngIf="mant.estado === 'En proceso'"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#refaccionesModal" 
+                        (click)="abrirModalRefacciones(mant)"
+                        title="Agregar Refacciones">
+                  <i class="bi bi-currency-dollar"></i>
+                </button>
+
+                <!-- Botón Finalizar - Solo si está En proceso -->
+                <button class="btn btn-sm btn-warning me-1" 
+                        *ngIf="mant.estado === 'En proceso'"
+                        (click)="finalizarMantenimiento(mant)"
+                        title="Finalizar Mantenimiento">
+                  <i class="bi bi-check-circle"></i> Finalizar
+                </button>
+
+                <!-- Botón Ver Reporte - Solo si está Completado -->
+                <button class="btn btn-sm btn-primary me-1" 
+                        *ngIf="mant.estado === 'Completado'"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#reporteModal" 
+                        (click)="verReporte(mant)"
+                        title="Ver Reporte">
+                  <i class="bi bi-file-earmark-text"></i> Reporte
+                </button>
+
+                <!-- Botón Eliminar - Solo si está Programado o Cancelado -->
+                <button class="btn btn-sm btn-outline-danger" 
+                        *ngIf="mant.estado === 'Programado' || mant.estado === 'Cancelado'"
+                        (click)="eliminarMantenimiento(mant.id_mantenimiento!)"
+                        title="Eliminar">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="mantenimientos.length === 0">
+              <td colspan="8" class="text-center text-muted py-4">
+                <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                <p class="mb-0 mt-2">No hay mantenimientos programados</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Crear/Editar Mantenimiento -->
+<div class="modal fade" id="mantenimientoModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-gear"></i> {{ modoEdicion ? 'Editar' : 'Programar' }} Mantenimiento
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Equipo <span class="text-danger">*</span></label>
+              <select class="form-select" [(ngModel)]="mantenimientoSeleccionado.id_equipo" name="id_equipo" required>
+                <option value="0">Seleccione un equipo</option>
+                <option *ngFor="let equipo of equipos" [value]="equipo.id_equipo">
+                  {{ equipo.numero_serie }} - {{ equipo.nombre_tipo }}
+                </option>
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Responsable <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" [(ngModel)]="mantenimientoSeleccionado.responsable" name="responsable" required placeholder="Solo letras">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Fecha Programada <span class="text-danger">*</span></label>
+              <input type="date" class="form-control" [(ngModel)]="mantenimientoSeleccionado.fecha_programada" name="fecha_programada" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Tipo de Mantenimiento</label>
+              <select class="form-select" [(ngModel)]="mantenimientoSeleccionado.tipo_mantenimiento" name="tipo_mantenimiento">
+                <option value="Preventivo">Preventivo</option>
+                <option value="Correctivo">Correctivo</option>
+                <option value="Inspección">Inspección</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Descripción del Trabajo</label>
+            <textarea class="form-control" rows="3" [(ngModel)]="mantenimientoSeleccionado.descripcion_trabajo" name="descripcion_trabajo" placeholder="Descripción detallada del trabajo a realizar"></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Observaciones</label>
+            <textarea class="form-control" rows="2" [(ngModel)]="mantenimientoSeleccionado.observaciones" name="observaciones"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="guardarMantenimiento()">
+          <i class="bi bi-save"></i> Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Refacciones -->
+<div class="modal fade" id="refaccionesModal" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-currency-dollar"></i> Refacciones del Mantenimiento
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Formulario Nueva Refacción -->
+        <div class="card mb-3">
+          <div class="card-header bg-primary text-white">
+            <strong><i class="bi bi-plus-circle"></i> Agregar Nueva Refacción</strong>
+          </div>
+          <div class="card-body">
+            <form>
+              <div class="row">
+                <div class="col-md-3 mb-3">
+                  <label class="form-label">Folio Compra <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" [(ngModel)]="refaccionNueva.folio_compra" name="folio_compra" required>
+                </div>
+                <div class="col-md-5 mb-3">
+                  <label class="form-label">Descripción <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" [(ngModel)]="refaccionNueva.descripcion" name="descripcion" required>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Proveedor</label>
+                  <input type="text" class="form-control" [(ngModel)]="refaccionNueva.proveedor" name="proveedor">
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-3 mb-3">
+                  <label class="form-label">Cantidad <span class="text-danger">*</span></label>
+                  <input type="number" class="form-control" [(ngModel)]="refaccionNueva.cantidad" name="cantidad" min="1" required>
+                </div>
+                <div class="col-md-3 mb-3">
+                  <label class="form-label">Costo Unitario <span class="text-danger">*</span></label>
+                  <input type="number" class="form-control" [(ngModel)]="refaccionNueva.costo_unitario" name="costo_unitario" step="0.01" min="0" required>
+                </div>
+                <div class="col-md-3 mb-3">
+                  <label class="form-label">Fecha Compra <span class="text-danger">*</span></label>
+                  <input type="date" class="form-control" [(ngModel)]="refaccionNueva.fecha_compra" name="fecha_compra" required>
+                </div>
+                <div class="col-md-3 mb-3">
+                  <label class="form-label">&nbsp;</label>
+                  <button type="button" class="btn btn-success w-100" (click)="guardarRefaccion()">
+                    <i class="bi bi-plus-lg"></i> Agregar
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Lista de Refacciones -->
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered">
+            <thead class="table-light">
+              <tr>
+                <th>Folio</th>
+                <th>Descripción</th>
+                <th>Proveedor</th>
+                <th>Cantidad</th>
+                <th>Costo Unit.</th>
+                <th>Costo Total</th>
+                <th>Fecha</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let ref of refacciones">
+                <td><strong>{{ ref.folio_compra }}</strong></td>
+                <td>{{ ref.descripcion }}</td>
+                <td>{{ ref.proveedor || '-' }}</td>
+                <td>{{ ref.cantidad }}</td>
+                <td>${{ ref.costo_unitario | number:'1.2-2' }}</td>
+                <td><strong>${{ ref.costo_total | number:'1.2-2' }}</strong></td>
+                <td>{{ ref.fecha_compra | date:'dd/MM/yyyy' }}</td>
+              </tr>
+              <tr *ngIf="refacciones.length === 0">
+                <td colspan="7" class="text-center text-muted">No hay refacciones registradas</td>
+              </tr>
+              <tr *ngIf="refacciones.length > 0" class="table-active">
+                <td colspan="5" class="text-end"><strong>TOTAL:</strong></td>
+                <td colspan="2">
+                  <strong class="text-primary">${{ calcularTotalRefacciones() | number:'1.2-2' }}</strong>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Reporte Completo -->
+<div class="modal fade" id="reporteModal" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-file-earmark-text"></i> Reporte de Mantenimiento
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" *ngIf="reporteActual">
+        <!-- Información del Equipo -->
+        <div class="card mb-3">
+          <div class="card-header bg-light">
+            <h6 class="mb-0"><i class="bi bi-wrench"></i> Información del Equipo</h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-4">
+                <p class="mb-1"><strong>Número de Serie:</strong></p>
+                <p>{{ reporteActual.mantenimiento.numero_serie }}</p>
+              </div>
+              <div class="col-md-4">
+                <p class="mb-1"><strong>Tipo:</strong></p>
+                <p>{{ reporteActual.mantenimiento.nombre_tipo }}</p>
+              </div>
+              <div class="col-md-4">
+                <p class="mb-1"><strong>Área:</strong></p>
+                <p>{{ reporteActual.mantenimiento.nombre_area }}</p>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <p class="mb-1"><strong>Marca:</strong></p>
+                <p>{{ reporteActual.mantenimiento.marca || '-' }}</p>
+              </div>
+              <div class="col-md-6">
+                <p class="mb-1"><strong>Modelo:</strong></p>
+                <p>{{ reporteActual.mantenimiento.modelo || '-' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Información del Mantenimiento -->
+        <div class="card mb-3">
+          <div class="card-header bg-light">
+            <h6 class="mb-0"><i class="bi bi-gear"></i> Información del Mantenimiento</h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-3">
+                <p class="mb-1"><strong>Tipo:</strong></p>
+                <span class="badge" [ngClass]="getTipoBadgeClass(reporteActual.mantenimiento.tipo_mantenimiento || '')">
+                  {{ reporteActual.mantenimiento.tipo_mantenimiento }}
+                </span>
+              </div>
+              <div class="col-md-3">
+                <p class="mb-1"><strong>Estado:</strong></p>
+                <span class="badge" [ngClass]="getBadgeClass(reporteActual.mantenimiento.estado || '')">
+                  {{ reporteActual.mantenimiento.estado }}
+                </span>
+              </div>
+              <div class="col-md-3">
+                <p class="mb-1"><strong>Responsable:</strong></p>
+                <p>{{ reporteActual.mantenimiento.responsable }}</p>
+              </div>
+              <div class="col-md-3">
+                <p class="mb-1"><strong>Duración:</strong></p>
+                <p class="text-primary"><strong>{{ reporteActual.duracionDias }}d {{ reporteActual.duracionHoras }}h</strong></p>
+              </div>
+            </div>
+            <div class="row mt-3">
+              <div class="col-md-4">
+                <p class="mb-1"><strong>Fecha Programada:</strong></p>
+                <p>{{ reporteActual.mantenimiento.fecha_programada | date:'dd/MM/yyyy HH:mm' }}</p>
+              </div>
+              <div class="col-md-4">
+                <p class="mb-1"><strong>Fecha Iniciado:</strong></p>
+                <p>{{ reporteActual.mantenimiento.fecha_iniciado | date:'dd/MM/yyyy HH:mm' }}</p>
+              </div>
+              <div class="col-md-4">
+                <p class="mb-1"><strong>Fecha Finalizado:</strong></p>
+                <p>{{ reporteActual.mantenimiento.fecha_realizado | date:'dd/MM/yyyy HH:mm' }}</p>
+              </div>
+            </div>
+            <div class="row mt-3" *ngIf="reporteActual.mantenimiento.descripcion_trabajo">
+              <div class="col-12">
+                <p class="mb-1"><strong>Descripción del Trabajo:</strong></p>
+                <p>{{ reporteActual.mantenimiento.descripcion_trabajo }}</p>
+              </div>
+            </div>
+            <div class="row" *ngIf="reporteActual.mantenimiento.observaciones">
+              <div class="col-12">
+                <p class="mb-1"><strong>Observaciones:</strong></p>
+                <p>{{ reporteActual.mantenimiento.observaciones }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Refacciones Utilizadas -->
+        <div class="card mb-3">
+          <div class="card-header bg-light">
+            <h6 class="mb-0"><i class="bi bi-currency-dollar"></i> Refacciones Utilizadas</h6>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-sm mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Folio</th>
+                    <th>Descripción</th>
+                    <th>Proveedor</th>
+                    <th>Cantidad</th>
+                    <th>Costo Unitario</th>
+                    <th>Costo Total</th>
+                    <th>Fecha Compra</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let ref of reporteActual.refacciones">
+                    <td>{{ ref.folio_compra }}</td>
+                    <td>{{ ref.descripcion }}</td>
+                    <td>{{ ref.proveedor || '-' }}</td>
+                    <td>{{ ref.cantidad }}</td>
+                    <td>${{ ref.costo_unitario | number:'1.2-2' }}</td>
+                    <td><strong>${{ ref.costo_total | number:'1.2-2' }}</strong></td>
+                    <td>{{ ref.fecha_compra | date:'dd/MM/yyyy' }}</td>
+                  </tr>
+                  <tr *ngIf="reporteActual.refacciones.length === 0">
+                    <td colspan="7" class="text-center text-muted">No se utilizaron refacciones</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resumen de Costos -->
+        <!-- <div class="card border-primary">
+          <div class="card-header bg-primary text-white">
+            <h6 class="mb-0"><i class="bi bi-calculator"></i> Resumen de Costos</h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <p class="mb-1"><strong>Total Refacciones:</strong></p>
+                <h4 class="text-primary">${{ reporteActual.costoTotal | number:'1.2-2' }}</h4>
+              </div>
+              <div class="col-md-6">
+                <p class="mb-1"><strong>Cantidad de Refacciones:</strong></p>
+                <h4 class="text-info">{{ reporteActual.refacciones.length }}</h4>
+              </div>
+            </div>
+          </div>
+        </div> -->
+        <!-- Resumen de Costos -->
+        <div class="card border-primary">
+          <div class="card-header bg-primary text-white">
+            <h6 class="mb-0"><i class="bi bi-calculator"></i> Resumen de Costos</h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <p class="mb-1"><strong>Total Refacciones:</strong></p>
+                <h4 class="text-primary">${{ reporteActual.costoTotal | number:'1.2-2' }}</h4>
+              </div>
+              <div class="col-md-6">
+                <p class="mb-1"><strong>Cantidad de Refacciones:</strong></p>
+                <h4 class="text-info">{{ reporteActual.refacciones.length }}</h4>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-primary" (click)="imprimirReporte()">
+          <i class="bi bi-printer"></i> Imprimir Reporte
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

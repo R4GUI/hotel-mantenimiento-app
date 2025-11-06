@@ -1,0 +1,192 @@
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col-12">
+      <h2><i class="bi bi-gear-fill"></i> Configuración</h2>
+      <p class="text-muted">Administra áreas y tipos de equipos</p>
+    </div>
+  </div>
+
+  <!-- ALERTA INFORMATIVA -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="alert alert-info" role="alert">
+        <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Instrucciones</h5>
+        <ol class="mb-0">
+          <li>Primero agrega <strong>Áreas</strong> (Ej: Recepción, Habitaciones Piso 1, Cocina, Lavandería)</li>
+          <li>Luego agrega <strong>Tipos de Equipos</strong> (Ej: Aire Acondicionado, Computadora, Lavadora, Refrigerador)</li>
+          <li>Una vez que tengas áreas y tipos, ve a <strong>Equipos</strong> para agregar tus equipos</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- ÁREAS -->
+    <div class="col-md-6 mb-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="bi bi-geo-alt"></i> Áreas del Hotel</h5>
+          <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#areaModal" (click)="abrirModalArea()">
+            <i class="bi bi-plus-lg"></i> Nueva Área
+          </button>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Descripción</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let area of areas">
+                  <td><strong>{{ area.id_area }}</strong></td>
+                  <td>{{ area.nombre_area }}</td>
+                  <td>{{ area.descripcion || '-' }}</td>
+                  <td>
+                    <button class="btn btn-sm btn-outline-primary me-1" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#areaModal" 
+                            (click)="abrirModalArea(area)">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" 
+                            (click)="eliminarArea(area.id_area!)">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+                <tr *ngIf="areas.length === 0">
+                  <td colspan="4" class="text-center text-muted py-4">
+                    <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                    <p class="mb-0 mt-2">No hay áreas registradas</p>
+                    <small>Haz clic en "Nueva Área" para comenzar</small>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TIPOS DE EQUIPOS -->
+    <div class="col-md-6 mb-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="bi bi-wrench"></i> Tipos de Equipos</h5>
+          <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#tipoModal" (click)="abrirModalTipo()">
+            <i class="bi bi-plus-lg"></i> Nuevo Tipo
+          </button>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Descripción</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let tipo of tipos">
+                  <td><strong>{{ tipo.id_tipo }}</strong></td>
+                  <td>{{ tipo.nombre_tipo }}</td>
+                  <td>{{ tipo.descripcion || '-' }}</td>
+                  <td>
+                    <button class="btn btn-sm btn-outline-primary me-1" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#tipoModal" 
+                            (click)="abrirModalTipo(tipo)">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" 
+                            (click)="eliminarTipo(tipo.id_tipo!)">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+                <tr *ngIf="tipos.length === 0">
+                  <td colspan="4" class="text-center text-muted py-4">
+                    <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                    <p class="mb-0 mt-2">No hay tipos registrados</p>
+                    <small>Haz clic en "Nuevo Tipo" para comenzar</small>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Áreas -->
+<div class="modal fade" id="areaModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-geo-alt"></i> {{ modoEdicionArea ? 'Editar' : 'Nueva' }} Área
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label class="form-label">Nombre del Área <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" [(ngModel)]="areaSeleccionada.nombre_area" name="nombre_area" required placeholder="Ej: Recepción">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            <textarea class="form-control" rows="3" [(ngModel)]="areaSeleccionada.descripcion" name="descripcion" placeholder="Descripción opcional"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="guardarArea()">
+          <i class="bi bi-save"></i> Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Tipos -->
+<div class="modal fade" id="tipoModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-wrench"></i> {{ modoEdicionTipo ? 'Editar' : 'Nuevo' }} Tipo
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label class="form-label">Nombre del Tipo <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" [(ngModel)]="tipoSeleccionado.nombre_tipo" name="nombre_tipo" required placeholder="Ej: Aire Acondicionado">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            <textarea class="form-control" rows="3" [(ngModel)]="tipoSeleccionado.descripcion" name="descripcion" placeholder="Descripción opcional"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-success" (click)="guardarTipo()">
+          <i class="bi bi-save"></i> Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
