@@ -7,11 +7,12 @@ import { Area, Tipo, Equipo, Mantenimiento, Refaccion, Estadisticas } from '../m
   providedIn: 'root'
 })
 export class ApiService {
-  private apiUrl = 'http://localhost:3000/api';
+  // 🔥 URL de tu backend en Render
+  private apiUrl = 'https://api-mantenimiento-hotel.onrender.com/api';
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
-  // Areas
+  // 📁 Áreas
   getAreas(): Observable<Area[]> {
     return this.http.get<Area[]>(`${this.apiUrl}/areas`);
   }
@@ -28,7 +29,7 @@ export class ApiService {
     return this.http.delete(`${this.apiUrl}/areas/${id}`);
   }
 
-  // Tipos
+  // 📦 Tipos
   getTipos(): Observable<Tipo[]> {
     return this.http.get<Tipo[]>(`${this.apiUrl}/tipos`);
   }
@@ -45,7 +46,7 @@ export class ApiService {
     return this.http.delete(`${this.apiUrl}/tipos/${id}`);
   }
 
-  // Equipos
+  // ⚙️ Equipos
   getEquipos(): Observable<Equipo[]> {
     return this.http.get<Equipo[]>(`${this.apiUrl}/equipos`);
   }
@@ -62,7 +63,7 @@ export class ApiService {
     return this.http.delete(`${this.apiUrl}/equipos/${id}`);
   }
 
-  // Mantenimientos
+  // 🛠️ Mantenimientos
   getMantenimientos(): Observable<Mantenimiento[]> {
     return this.http.get<Mantenimiento[]>(`${this.apiUrl}/mantenimientos`);
   }
@@ -79,7 +80,7 @@ export class ApiService {
     return this.http.delete(`${this.apiUrl}/mantenimientos/${id}`);
   }
 
-  // Refacciones
+  // 🔩 Refacciones
   getRefaccionesByMantenimiento(idMantenimiento: number): Observable<Refaccion[]> {
     return this.http.get<Refaccion[]>(`${this.apiUrl}/refacciones/mantenimiento/${idMantenimiento}`);
   }
@@ -88,7 +89,7 @@ export class ApiService {
     return this.http.post<Refaccion>(`${this.apiUrl}/refacciones`, refaccion);
   }
 
-  // Estadísticas
+  // 📊 Estadísticas
   getEstadisticas(): Observable<Estadisticas> {
     return this.http.get<Estadisticas>(`${this.apiUrl}/estadisticas`);
   }
