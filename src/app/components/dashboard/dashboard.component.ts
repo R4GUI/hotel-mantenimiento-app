@@ -2,7 +2,8 @@ import { Component, OnInit, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../../services/api.service';
-import { Estadisticas, Mantenimiento } from '../../models/interfaces';
+import { AuthService } from '../../services/auth.service';
+import { Estadisticas, Mantenimiento, Equipo } from '../../models/interfaces';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData } from 'chart.js';
 
@@ -75,11 +76,16 @@ export class DashboardComponent implements OnInit {
   estadisticas: Estadisticas = {
     totalEquipos: 0,
     equiposOperativos: 0,
+    equiposFueraServicio: 0,
+    mantenimientosProgramados: 0,
     mantenimientosPendientes: 0,
+    mantenimientosRealizados: 0,
     costoTotal: 0
   };
 
   mantenimientosProximos: Mantenimiento[] = [];
+  equipos: Equipo[] = [];
+  isAdmin: boolean = false;
   
   // Configuración de gráfica de equipos por área
   public pieChartData: ChartData<'pie'> = {
@@ -139,30 +145,42 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     private apiService: ApiService,
+    private authService: AuthService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) {
+    const user = this.authService.currentUserValue;
+    this.isAdmin = user?.rol === 'admin';
+  }
 
   ngOnInit(): void {
     this.cargarTodo();
   }
 
   cargarTodo(): void {
-    // Cargar en secuencia para asegurar que todo se carga
+    this.cargarEquipos();
     this.cargarEstadisticas();
     this.cargarMantenimientosProximos();
     
-    // Esperar un poco antes de cargar las gráficas
     setTimeout(() => {
       this.cargarMantenimientosPorArea();
       this.cargarMantenimientosPorTipo();
     }, 500);
   }
 
+  cargarEquipos(): void {
+    this.apiService.getEquipos().subscribe({
+      next: (data) => {
+        this.equipos = data;
+        this.cdr.detectChanges();
+      },
+      error: (error) => console.error('Error al cargar equipos:', error)
+    });
+  }
+
   cargarEstadisticas(): void {
     this.apiService.getEstadisticas().subscribe({
       next: (data) => {
         this.estadisticas = data;
-        console.log('Estadísticas cargadas:', data);
         this.cdr.detectChanges();
       },
       error: (error) => {
@@ -174,40 +192,27 @@ export class DashboardComponent implements OnInit {
   cargarMantenimientosProximos(): void {
     this.apiService.getMantenimientos().subscribe({
       next: (data) => {
-        console.log('Mantenimientos cargados:', data);
         this.mantenimientosProximos = data
-          .filter(m => m.estado === 'Programado' || m.estado === 'En proceso')
+          .filter(m => m.estado === 'Programado' || m.estado === 'En Proceso')
           .sort((a, b) => new Date(a.fecha_programada).getTime() - new Date(b.fecha_programada).getTime())
           .slice(0, 5);
-        console.log('Próximos mantenimientos:', this.mantenimientosProximos);
         this.cdr.detectChanges();
       },
-      error: (error) => {
-        console.error('Error al cargar mantenimientos:', error);
-      }
+      error: (error) => console.error('Error al cargar mantenimientos próximos:', error)
     });
   }
 
   cargarMantenimientosPorArea(): void {
     this.apiService.getMantenimientos().subscribe({
       next: (mantenimientos) => {
-        console.log('Cargando gráfica por área. Mantenimientos:', mantenimientos);
-        
-        if (mantenimientos.length === 0) {
-          console.log('No hay mantenimientos para la gráfica');
-          return;
-        }
+        if (mantenimientos.length === 0) return;
 
-        // Agrupar mantenimientos por área
         const areaCount: { [key: string]: number } = {};
         mantenimientos.forEach(m => {
-          const area = m.nombre_area || 'Sin área';
+          const area = this.getEquipoArea(m.id_equipo);
           areaCount[area] = (areaCount[area] || 0) + 1;
         });
 
-        console.log('Conteo por área:', areaCount);
-
-        // Actualizar datos de la gráfica
         this.pieChartData = {
           labels: Object.keys(areaCount),
           datasets: [{
@@ -225,11 +230,7 @@ export class DashboardComponent implements OnInit {
           }]
         };
         
-        console.log('Datos gráfica pie:', this.pieChartData);
-        
-        // Forzar actualización
         this.cdr.detectChanges();
-        
         if (this.chart) {
           this.chart.chart?.update();
         }
@@ -243,13 +244,9 @@ export class DashboardComponent implements OnInit {
   cargarMantenimientosPorTipo(): void {
     this.apiService.getMantenimientos().subscribe({
       next: (mantenimientos) => {
-        console.log('Cargando gráfica por tipo. Mantenimientos:', mantenimientos);
-        
         const preventivos = mantenimientos.filter(m => m.tipo_mantenimiento === 'Preventivo').length;
         const correctivos = mantenimientos.filter(m => m.tipo_mantenimiento === 'Correctivo').length;
         const inspecciones = mantenimientos.filter(m => m.tipo_mantenimiento === 'Inspección').length;
-
-        console.log('Preventivos:', preventivos, 'Correctivos:', correctivos, 'Inspecciones:', inspecciones);
 
         this.barChartData = {
           labels: ['Preventivo', 'Correctivo', 'Inspección'],
@@ -260,11 +257,7 @@ export class DashboardComponent implements OnInit {
           }]
         };
         
-        console.log('Datos gráfica barras:', this.barChartData);
-        
-        // Forzar actualización
         this.cdr.detectChanges();
-        
         if (this.chart) {
           this.chart.chart?.update();
         }
@@ -273,6 +266,30 @@ export class DashboardComponent implements OnInit {
         console.error('Error al cargar mantenimientos para gráfica:', error);
       }
     });
+  }
+
+  getEquipoNombre(id: number): string {
+    const equipo = this.equipos.find(e => e.id_equipo === id);
+    if (equipo?.marca && equipo?.modelo) {
+      return `${equipo.marca} ${equipo.modelo}`;
+    }
+    return equipo?.numero_serie || `Equipo #${id}`;
+  }
+
+  getEquipoArea(id: number): string {
+    const equipo = this.equipos.find(e => e.id_equipo === id);
+    return equipo?.nombre_area || 'Sin área';
+  }
+
+  getTipoClass(tipo: string | undefined): string {
+    if (!tipo) return 'bg-secondary';
+    
+    const classes: { [key: string]: string } = {
+      'Preventivo': 'bg-primary',
+      'Correctivo': 'bg-warning',
+      'Inspección': 'bg-info'
+    };
+    return classes[tipo] || 'bg-secondary';
   }
 
   getDiasHasta(fecha: string): number {
@@ -284,13 +301,13 @@ export class DashboardComponent implements OnInit {
   }
 
   getBadgeClass(estado: string): string {
-    switch(estado) {
-      case 'Programado': return 'bg-info';
-      case 'En proceso': return 'bg-warning';
-      case 'Completado': return 'bg-success';
-      case 'Cancelado': return 'bg-danger';
-      default: return 'bg-secondary';
-    }
+    const classes: { [key: string]: string } = {
+      'Programado': 'bg-info',
+      'En Proceso': 'bg-warning',
+      'Completado': 'bg-success',
+      'Cancelado': 'bg-danger'
+    };
+    return classes[estado] || 'bg-secondary';
   }
 
   getUrgenciaClass(dias: number): string {

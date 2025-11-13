@@ -1,0 +1,325 @@
+<div class="container-fluid">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="mb-1">
+            <i class="bi bi-file-earmark-bar-graph"></i> Reportes de Mantenimiento
+          </h2>
+          <p class="text-muted">Genera reportes detallados y estadísticas</p>
+        </div>
+        <button class="btn btn-primary btn-lg" (click)="abrirModalReporte()">
+          <i class="bi bi-plus-circle"></i> Generar Reporte
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estadísticas (Solo si hay reporte generado) -->
+  <div class="row g-3 mb-4" *ngIf="mantenimientosFiltrados.length > 0">
+    <div class="col-md-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="text-muted mb-1 small">Total Mantenimientos</p>
+              <h2 class="mb-0 fw-bold">{{ estadisticas.total }}</h2>
+            </div>
+            <div class="icon-box bg-primary">
+              <i class="bi bi-clipboard-data fs-1 text-white"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="text-muted mb-1 small">Completados</p>
+              <h2 class="mb-0 fw-bold text-success">{{ estadisticas.completados }}</h2>
+            </div>
+            <div class="icon-box bg-success">
+              <i class="bi bi-check-circle fs-1 text-white"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="text-muted mb-1 small">Costo Total</p>
+              <h2 class="mb-0 fw-bold text-info">${{ estadisticas.costoTotal | number:'1.2-2' }}</h2>
+            </div>
+            <div class="icon-box bg-info">
+              <i class="bi bi-cash-stack fs-1 text-white"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="text-muted mb-1 small">Tiempo Promedio</p>
+              <h2 class="mb-0 fw-bold text-warning">{{ estadisticas.tiempoPromedio | number:'1.1-1' }}h</h2>
+            </div>
+            <div class="icon-box bg-warning">
+              <i class="bi bi-clock-history fs-1 text-white"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botones de Exportación -->
+  <div class="row mb-3" *ngIf="mantenimientosFiltrados.length > 0">
+    <div class="col-12">
+      <div class="d-flex gap-2">
+        <button class="btn btn-danger" (click)="generarPDF()">
+          <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
+        </button>
+        <button class="btn btn-success" (click)="exportarExcel()">
+          <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+        </button>
+        <button class="btn btn-secondary" (click)="limpiarFiltros()">
+          <i class="bi bi-x-circle"></i> Limpiar Reporte
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de Resultados -->
+  <div class="card border-0 shadow-sm" *ngIf="mantenimientosFiltrados.length > 0">
+    <div class="card-header bg-white border-0">
+      <h5 class="mb-0">
+        <i class="bi bi-table"></i> Resultados 
+        <span class="badge bg-primary">{{ mantenimientosFiltrados.length }}</span>
+      </h5>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Equipo</th>
+              <th>Área</th>
+              <th>Tipo Equipo</th>
+              <th>Fecha</th>
+              <th>Responsable</th>
+              <th>Tipo Mant.</th>
+              <th>Estado</th>
+              <th>Duración</th>
+              <th>Costo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let mant of mantenimientosFiltrados">
+              <td>
+                <strong>{{ getEquipoNombre(mant.id_equipo) }}</strong>
+              </td>
+              <td>
+                <span class="badge bg-secondary">
+                  {{ getEquipoArea(mant.id_equipo) }}
+                </span>
+              </td>
+              <td>
+                <span class="badge bg-dark">
+                  {{ getEquipoTipo(mant.id_equipo) }}
+                </span>
+              </td>
+              <td>{{ mant.fecha_programada | date:'dd/MM/yyyy' }}</td>
+              <td>
+                <i class="bi bi-person-circle"></i>
+                {{ mant.responsable }}
+              </td>
+              <td>
+                <span class="badge" [ngClass]="getTipoClass(mant.tipo_mantenimiento)">
+                  {{ mant.tipo_mantenimiento }}
+                </span>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="getBadgeClass(mant.estado)">
+                  {{ mant.estado }}
+                </span>
+              </td>
+              <td>
+                <ng-container *ngIf="mant.fecha_inicio && mant.fecha_finalizacion">
+                  {{ calcularDuracion(mant.fecha_inicio, mant.fecha_finalizacion) | number:'1.1-1' }}h
+                </ng-container>
+                <ng-container *ngIf="!mant.fecha_inicio || !mant.fecha_finalizacion">
+                  -
+                </ng-container>
+              </td>
+              <td>
+                <strong>${{ (mant.costo || 0) | number:'1.2-2' }}</strong>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensaje si no hay reporte -->
+  <div class="text-center py-5" *ngIf="mantenimientosFiltrados.length === 0">
+    <i class="bi bi-file-earmark-bar-graph text-muted" style="font-size: 5rem;"></i>
+    <h4 class="mt-3 text-muted">No hay reporte generado</h4>
+    <p class="text-muted">Haz clic en "Generar Reporte" para comenzar</p>
+  </div>
+</div>
+
+<!-- Modal para Generar Reporte -->
+<div class="modal fade show" [class.d-block]="mostrarModalReporte" 
+     [style.background]="mostrarModalReporte ? 'rgba(0,0,0,0.5)' : 'none'" 
+     *ngIf="mostrarModalReporte">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-funnel"></i> Configurar Reporte
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="cerrarModalReporte()"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="row">
+            <!-- Tipo de Período -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">
+                <i class="bi bi-calendar-range"></i> Tipo de Período <span class="text-danger">*</span>
+              </label>
+              <select class="form-select" [(ngModel)]="filtros.tipoFecha" name="tipoFecha" (change)="onTipoFechaChange()">
+                <option value="hoy">Hoy</option>
+                <option value="semana">Semana Específica</option>
+                <option value="mes">Mes Completo</option>
+                <option value="año">Año Completo</option>
+                <option value="personalizado">Personalizado</option>
+              </select>
+            </div>
+
+            <!-- Selector de Semana (Solo si tipo es "semana") -->
+            <div class="col-md-6 mb-3" *ngIf="filtros.tipoFecha === 'semana'">
+              <label class="form-label fw-bold">
+                <i class="bi bi-calendar-week"></i> Seleccionar Semana
+              </label>
+              <select class="form-select" [(ngModel)]="filtros.semanaSeleccionada" name="semana" (change)="onTipoFechaChange()">
+                <option *ngFor="let semana of semanasDelMes" [value]="semana.numero">
+                  {{ semana.rango }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Selector de Mes (Si es semana o mes) -->
+            <div class="col-md-6 mb-3" *ngIf="filtros.tipoFecha === 'semana' || filtros.tipoFecha === 'mes'">
+              <label class="form-label fw-bold">
+                <i class="bi bi-calendar-month"></i> Seleccionar Mes
+              </label>
+              <select class="form-select" [(ngModel)]="filtros.mesSeleccionado" name="mes" (change)="onTipoFechaChange()">
+                <option *ngFor="let mes of mesesDelAnio" [value]="mes.numero">
+                  {{ mes.nombre }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Fechas Personalizadas (Solo si tipo es "personalizado") -->
+            <ng-container *ngIf="filtros.tipoFecha === 'personalizado'">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">
+                  <i class="bi bi-calendar-event"></i> Fecha Inicio
+                </label>
+                <input type="date" class="form-control" [(ngModel)]="filtros.fechaInicio" name="fechaInicio">
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">
+                  <i class="bi bi-calendar-check"></i> Fecha Fin
+                </label>
+                <input type="date" class="form-control" [(ngModel)]="filtros.fechaFin" name="fechaFin">
+              </div>
+            </ng-container>
+
+            <!-- Área -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">
+                <i class="bi bi-geo-alt"></i> Área
+              </label>
+              <select class="form-select" [(ngModel)]="filtros.idArea" name="area">
+                <option [value]="0">Todas las áreas</option>
+                <option *ngFor="let area of areas" [value]="area.id_area">
+                  {{ area.nombre_area }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Tipo de Equipo -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">
+                <i class="bi bi-tag"></i> Tipo de Equipo
+              </label>
+              <select class="form-select" [(ngModel)]="filtros.idTipo" name="tipo">
+                <option [value]="0">Todos los tipos</option>
+                <option *ngFor="let tipo of tipos" [value]="tipo.id_tipo">
+                  {{ tipo.nombre_tipo }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Estado -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">
+                <i class="bi bi-flag"></i> Estado
+              </label>
+              <select class="form-select" [(ngModel)]="filtros.estado" name="estado">
+                <option value="">Todos los estados</option>
+                <option value="Programado">Programado</option>
+                <option value="En Proceso">En Proceso</option>
+                <option value="Completado">Completado</option>
+                <option value="Cancelado">Cancelado</option>
+              </select>
+            </div>
+
+            <!-- Tipo de Mantenimiento -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">
+                <i class="bi bi-tools"></i> Tipo de Mantenimiento
+              </label>
+              <select class="form-select" [(ngModel)]="filtros.tipoMantenimiento" name="tipoMant">
+                <option value="">Todos los tipos</option>
+                <option value="Preventivo">Preventivo</option>
+                <option value="Correctivo">Correctivo</option>
+                <option value="Inspección">Inspección</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Información del período seleccionado -->
+          <div class="alert alert-info mt-3" *ngIf="filtros.fechaInicio && filtros.fechaFin">
+            <i class="bi bi-info-circle"></i>
+            <strong>Período seleccionado:</strong> 
+            {{ filtros.fechaInicio | date:'dd/MM/yyyy' }} al {{ filtros.fechaFin | date:'dd/MM/yyyy' }}
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cerrarModalReporte()">
+          <i class="bi bi-x-circle"></i> Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" (click)="generarReporte()">
+          <i class="bi bi-file-earmark-bar-graph"></i> Generar Reporte
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

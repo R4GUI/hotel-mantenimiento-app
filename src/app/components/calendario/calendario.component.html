@@ -1,138 +1,268 @@
 <div class="container-fluid">
+  <!-- Header -->
   <div class="row mb-4">
     <div class="col-12">
-      <h2><i class="bi bi-calendar3"></i> Calendario de Mantenimientos</h2>
-      <p class="text-muted">Vista mensual de mantenimientos programados</p>
+      <h2 class="mb-1">
+        <i class="bi bi-calendar3"></i> Calendario de Mantenimientos
+      </h2>
+      <p class="text-muted">Visualiza y gestiona los mantenimientos programados</p>
     </div>
   </div>
 
   <div class="row">
-    <div class="col-lg-8 mb-4">
+    <!-- Calendario -->
+    <div class="col-lg-8">
       <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <full-calendar [options]="calendarOptions"></full-calendar>
+        <div class="card-header bg-white border-0">
+          <div class="d-flex justify-content-between align-items-center">
+            <button class="btn btn-sm btn-outline-primary" (click)="previousMonth()">
+              <i class="bi bi-chevron-left"></i> Anterior
+            </button>
+            <h5 class="mb-0 fw-bold">{{ getCurrentMonthYear() }}</h5>
+            <button class="btn btn-sm btn-outline-primary" (click)="nextMonth()">
+              Siguiente <i class="bi bi-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="calendar-grid">
+            <!-- Días de la semana -->
+            <div class="calendar-header">
+              <div class="calendar-day-name">Dom</div>
+              <div class="calendar-day-name">Lun</div>
+              <div class="calendar-day-name">Mar</div>
+              <div class="calendar-day-name">Mié</div>
+              <div class="calendar-day-name">Jue</div>
+              <div class="calendar-day-name">Vie</div>
+              <div class="calendar-day-name">Sáb</div>
+            </div>
+
+            <!-- Días del mes -->
+            <div class="calendar-days">
+              <!-- Espacios vacíos antes del primer día -->
+              <div class="calendar-day empty" *ngFor="let empty of [].constructor(firstDayOfMonth)"></div>
+              
+              <!-- Días del mes -->
+              <div class="calendar-day" *ngFor="let day of daysInMonth" 
+                   [class.has-events]="getMantenimientosDelDia(day).length > 0">
+                <div class="day-number">{{ day }}</div>
+                <div class="day-events">
+                  <div class="event-dot" 
+                       *ngFor="let mant of getMantenimientosDelDia(day).slice(0, 3)"
+                       [style.background-color]="getEventColor(mant.estado)"
+                       (click)="verDetalle(mant)"
+                       [title]="getEquipoNombre(mant.id_equipo)">
+                  </div>
+                  <small class="text-muted" *ngIf="getMantenimientosDelDia(day).length > 3">
+                    +{{ getMantenimientosDelDia(day).length - 3 }}
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Leyenda -->
       <div class="card border-0 shadow-sm mt-3">
         <div class="card-body">
-          <h6 class="mb-3">Leyenda de Estados:</h6>
-          <div class="d-flex flex-wrap gap-3">
-            <span class="badge bg-info"><i class="bi bi-circle-fill"></i> Programado</span>
-            <span class="badge bg-warning"><i class="bi bi-circle-fill"></i> En proceso</span>
-            <span class="badge bg-success"><i class="bi bi-circle-fill"></i> Completado</span>
-            <span class="badge bg-danger"><i class="bi bi-circle-fill"></i> Cancelado</span>
+          <h6 class="fw-bold mb-3">Leyenda de Estados</h6>
+          <div class="row g-2">
+            <div class="col-md-3">
+              <span class="badge bg-info me-2">●</span> Programado
+            </div>
+            <div class="col-md-3">
+              <span class="badge bg-warning me-2">●</span> En Proceso
+            </div>
+            <div class="col-md-3">
+              <span class="badge bg-success me-2">●</span> Completado
+            </div>
+            <div class="col-md-3">
+              <span class="badge bg-danger me-2">●</span> Cancelado
+            </div>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Lista de Mantenimientos del Mes -->
     <div class="col-lg-4">
-      <!-- Detalle del Mantenimiento -->
-      <div class="card border-0 shadow-sm" *ngIf="mantenimientoSeleccionado">
-        <div class="card-header bg-primary text-white">
-          <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0"><i class="bi bi-info-circle"></i> Detalle</h5>
-            <button type="button" class="btn-close btn-close-white" (click)="cerrarDetalle()"></button>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="mb-3">
-            <label class="text-muted small">EQUIPO</label>
-            <p class="mb-1"><strong>{{ mantenimientoSeleccionado.numero_serie }}</strong></p>
-            <p class="text-muted small mb-0">{{ mantenimientoSeleccionado.marca }} {{ mantenimientoSeleccionado.modelo }}</p>
-          </div>
-
-          <div class="mb-3">
-            <label class="text-muted small">ÁREA</label>
-            <p class="mb-0">{{ mantenimientoSeleccionado.nombre_area }}</p>
-          </div>
-
-          <div class="mb-3">
-            <label class="text-muted small">TIPO DE EQUIPO</label>
-            <p class="mb-0">{{ mantenimientoSeleccionado.nombre_tipo }}</p>
-          </div>
-
-          <div class="mb-3">
-            <label class="text-muted small">FECHA PROGRAMADA</label>
-            <p class="mb-0">{{ mantenimientoSeleccionado.fecha_programada | date:'dd/MM/yyyy' }}</p>
-          </div>
-
-          <div class="mb-3" *ngIf="mantenimientoSeleccionado.fecha_realizado">
-            <label class="text-muted small">FECHA REALIZADO</label>
-            <p class="mb-0">{{ mantenimientoSeleccionado.fecha_realizado | date:'dd/MM/yyyy' }}</p>
-          </div>
-
-          <div class="mb-3">
-            <label class="text-muted small">RESPONSABLE</label>
-            <p class="mb-0">{{ mantenimientoSeleccionado.responsable }}</p>
-          </div>
-
-          <div class="mb-3">
-            <label class="text-muted small">TIPO DE MANTENIMIENTO</label>
-            <p class="mb-0">
-              <span class="badge" [ngClass]="getTipoBadgeClass(mantenimientoSeleccionado.tipo_mantenimiento || '')">
-                {{ mantenimientoSeleccionado.tipo_mantenimiento }}
-              </span>
-            </p>
-          </div>
-
-          <div class="mb-3">
-            <label class="text-muted small">ESTADO</label>
-            <p class="mb-0">
-              <span class="badge" [ngClass]="getBadgeClass(mantenimientoSeleccionado.estado || '')">
-                {{ mantenimientoSeleccionado.estado }}
-              </span>
-            </p>
-          </div>
-
-          <div class="mb-3" *ngIf="mantenimientoSeleccionado.descripcion_trabajo">
-            <label class="text-muted small">DESCRIPCIÓN DEL TRABAJO</label>
-            <p class="mb-0">{{ mantenimientoSeleccionado.descripcion_trabajo }}</p>
-          </div>
-
-          <div class="mb-0" *ngIf="mantenimientoSeleccionado.observaciones">
-            <label class="text-muted small">OBSERVACIONES</label>
-            <p class="mb-0">{{ mantenimientoSeleccionado.observaciones }}</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Mensaje cuando no hay selección -->
-      <div class="card border-0 shadow-sm" *ngIf="!mantenimientoSeleccionado">
-        <div class="card-body text-center py-5">
-          <i class="bi bi-calendar-check text-muted" style="font-size: 3rem;"></i>
-          <p class="text-muted mt-3 mb-0">Haz clic en un evento del calendario para ver sus detalles</p>
-        </div>
-      </div>
-
-      <!-- Próximos Mantenimientos -->
-      <div class="card border-0 shadow-sm mt-3">
-        <div class="card-header bg-white">
-          <h6 class="mb-0"><i class="bi bi-clock-history"></i> Próximos Mantenimientos</h6>
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0">
+          <h6 class="mb-0 fw-bold">
+            <i class="bi bi-list-ul"></i> Mantenimientos del Mes
+          </h6>
         </div>
         <div class="card-body p-0">
-          <div class="list-group list-group-flush">
-            <div class="list-group-item" *ngFor="let mant of mantenimientos.slice(0, 5)">
+          <div class="list-group list-group-flush" style="max-height: 600px; overflow-y: auto;">
+            <div class="list-group-item" *ngFor="let mant of getMantenimientosDelMes()">
               <div class="d-flex justify-content-between align-items-start">
-                <div class="flex-grow-1">
-                  <h6 class="mb-1">{{ mant.numero_serie }}</h6>
-                  <small class="text-muted">{{ mant.nombre_tipo }} - {{ mant.nombre_area }}</small>
+                <div class="flex-grow-1" (click)="verDetalle(mant)" style="cursor: pointer;">
+                  <h6 class="mb-1">{{ getEquipoNombre(mant.id_equipo) }}</h6>
+                  <small class="text-muted">
+                    {{ mant.tipo_mantenimiento }} - {{ getEquipoArea(mant.id_equipo) }}
+                  </small>
+                  <br>
+                  <small class="text-muted">
+                    <i class="bi bi-calendar3"></i> {{ mant.fecha_programada | date:'dd/MM/yyyy' }}
+                  </small>
                 </div>
-                <span class="badge" [ngClass]="getBadgeClass(mant.estado || '')">
+                <span class="badge" [ngClass]="getBadgeClass(mant.estado)">
                   {{ mant.estado }}
                 </span>
               </div>
-              <small class="text-muted">
-                <i class="bi bi-calendar3"></i> {{ mant.fecha_programada | date:'dd/MM/yyyy' }}
-              </small>
             </div>
-            <div class="list-group-item text-center text-muted" *ngIf="mantenimientos.length === 0">
-              No hay mantenimientos programados
+            <div class="list-group-item text-center text-muted" *ngIf="getMantenimientosDelMes().length === 0">
+              <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+              <p class="mb-0 mt-2">No hay mantenimientos este mes</p>
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Detalles -->
+<div class="modal fade show" [class.d-block]="mostrarModal" 
+     [style.background]="mostrarModal ? 'rgba(0,0,0,0.5)' : 'none'" 
+     *ngIf="mostrarModal && mantenimientoSeleccionado">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-info-circle"></i> Detalles del Mantenimiento
+        </h5>
+        <button type="button" class="btn-close" (click)="cerrarModal()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <!-- Información del Equipo -->
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label fw-bold">
+                <i class="bi bi-wrench"></i> Equipo:
+              </label>
+              <p class="mb-0"><strong>{{ getEquipoNombre(mantenimientoSeleccionado.id_equipo) }}</strong></p>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label fw-bold">
+                <i class="bi bi-geo-alt"></i> Área:
+              </label>
+              <p class="mb-0">{{ getEquipoArea(mantenimientoSeleccionado.id_equipo) }}</p>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label fw-bold">
+                <i class="bi bi-tag"></i> Tipo de Equipo:
+              </label>
+              <p class="mb-0">{{ getEquipoTipo(mantenimientoSeleccionado.id_equipo) }}</p>
+            </div>
+          </div>
+
+          <!-- Fechas -->
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label fw-bold">
+                <i class="bi bi-calendar-event"></i> Fecha Programada:
+              </label>
+              <p class="mb-0">{{ mantenimientoSeleccionado.fecha_programada | date:'dd/MM/yyyy' }}</p>
+            </div>
+          </div>
+
+          <div class="col-md-6" *ngIf="mantenimientoSeleccionado.fecha_inicio">
+            <div class="mb-3">
+              <label class="form-label fw-bold">
+                <i class="bi bi-play-circle"></i> Fecha Inicio:
+              </label>
+              <p class="mb-0">{{ mantenimientoSeleccionado.fecha_inicio | date:'dd/MM/yyyy HH:mm' }}</p>
+            </div>
+          </div>
+
+          <div class="col-md-6" *ngIf="mantenimientoSeleccionado.fecha_finalizacion">
+            <div class="mb-3">
+              <label class="form-label fw-bold">
+                <i class="bi bi-check-circle"></i> Fecha Finalización:
+              </label>
+              <p class="mb-0">{{ mantenimientoSeleccionado.fecha_finalizacion | date:'dd/MM/yyyy HH:mm' }}</p>
+            </div>
+          </div>
+
+          <!-- Tipo y Estado -->
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label fw-bold">
+                <i class="bi bi-tools"></i> Tipo de Mantenimiento:
+              </label>
+              <br>
+              <span class="badge" [ngClass]="getTipoBadgeClass(mantenimientoSeleccionado.tipo_mantenimiento)">
+                {{ mantenimientoSeleccionado.tipo_mantenimiento }}
+              </span>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label fw-bold">
+                <i class="bi bi-flag"></i> Estado:
+              </label>
+              <br>
+              <span class="badge" [ngClass]="getBadgeClass(mantenimientoSeleccionado.estado)">
+                {{ mantenimientoSeleccionado.estado }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Responsable -->
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label fw-bold">
+                <i class="bi bi-person"></i> Responsable:
+              </label>
+              <p class="mb-0">{{ mantenimientoSeleccionado.responsable }}</p>
+            </div>
+          </div>
+
+          <!-- Costo -->
+          <div class="col-md-6" *ngIf="mantenimientoSeleccionado.costo">
+            <div class="mb-3">
+              <label class="form-label fw-bold">
+                <i class="bi bi-cash"></i> Costo:
+              </label>
+              <p class="mb-0">${{ mantenimientoSeleccionado.costo | number:'1.2-2' }}</p>
+            </div>
+          </div>
+
+          <!-- Descripción -->
+          <div class="col-12" *ngIf="mantenimientoSeleccionado.descripcion">
+            <div class="mb-3">
+              <label class="form-label fw-bold">
+                <i class="bi bi-file-text"></i> Descripción:
+              </label>
+              <p class="mb-0">{{ mantenimientoSeleccionado.descripcion }}</p>
+            </div>
+          </div>
+
+          <!-- Observaciones -->
+          <div class="col-12" *ngIf="mantenimientoSeleccionado.observaciones">
+            <div class="mb-3">
+              <label class="form-label fw-bold">
+                <i class="bi bi-chat-left-text"></i> Observaciones:
+              </label>
+              <p class="mb-0">{{ mantenimientoSeleccionado.observaciones }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cerrarModal()">
+          <i class="bi bi-x-circle"></i> Cerrar
+        </button>
       </div>
     </div>
   </div>
