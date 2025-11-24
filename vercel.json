@@ -1,5 +1,11 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "dist/hotel-mantenimiento-app/browser",
-  "installCommand": "npm install --legacy-peer-deps"
+  "outputDirectory": "dist/hotel-mantenimiento-app",
+  "installCommand": "npm install --legacy-peer-deps",
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
 }
