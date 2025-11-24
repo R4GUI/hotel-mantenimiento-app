@@ -7,10 +7,10 @@ import { MantenimientoComponent } from './components/mantenimiento/mantenimiento
 import { CalendarioComponent } from './components/calendario/calendario.component';
 import { ConfiguracionComponent } from './components/configuracion/configuracion.component';
 import { ReportesComponent } from './components/reportes/reportes.component';
-import { TicketsComponent } from './components/tickets/tickets.component'; // 👈 NUEVO
-import { ParaHoyComponent } from './components/para-hoy/para-hoy.component'; // 👈 NUEVO
-import { HorariosComponent } from './components/horarios/horarios.component'; // 👈 NUEVO
-import { ReporteTicketsComponent } from './components/reporte-tickets/reporte-tickets.component'; // 👈 NUEVO
+import { TicketsComponent } from './components/tickets/tickets.component'; 
+import { ParaHoyComponent } from './components/para-hoy/para-hoy.component'; 
+import { HorariosComponent } from './components/horarios/horarios.component';
+import { ReporteTicketsComponent } from './components/reporte-tickets/reporte-tickets.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },

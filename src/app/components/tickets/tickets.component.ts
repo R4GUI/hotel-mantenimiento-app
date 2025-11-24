@@ -68,7 +68,7 @@ crearTicket(): void {
   }
 
   this.apiService.createTicket(this.nuevoTicket).subscribe({
-    next: (response: any) => { // 👈 CAMBIAR a "any" para que acepte el message
+    next: (response: any) => { 
       this.toastService.success(response.message || 'Ticket creado exitosamente');
       this.cargarTickets();
       this.cerrarModal();

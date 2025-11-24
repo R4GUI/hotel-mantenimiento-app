@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
 import { Area, Tipo, Equipo, Mantenimiento, Refaccion } from '../../models/interfaces';
-import jsPDF from 'jspdf';  // 👈 AGREGAR
+import jsPDF from 'jspdf'; 
 import autoTable from 'jspdf-autotable';
 
 @Component({
@@ -74,7 +74,7 @@ export class MantenimientoComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarDatos();
-    this.cargarProveedores(); // 👈 NUEVO
+    this.cargarProveedores(); 
   }
 
   cargarDatos(): void {
@@ -343,7 +343,7 @@ export class MantenimientoComponent implements OnInit {
     this.mantenimientoParaRefacciones = mantenimiento;
     this.mostrarModalRefacciones = true;
     this.cargarRefacciones(mantenimiento.id_mantenimiento!);
-    this.cargarProveedores(); // 👈 AGREGAR ESTO
+    this.cargarProveedores(); 
   }
 
   cerrarModalRefacciones(): void {
@@ -351,8 +351,8 @@ export class MantenimientoComponent implements OnInit {
     this.mantenimientoParaRefacciones = null;
     this.refacciones = [];
     this.nuevaRefaccion = this.getRefaccionVacia();
-    this.proveedorSeleccionado = ''; // 👈 AGREGAR ESTO
-    this.mostrarInputProveedor = false; // 👈 AGREGAR ESTO
+    this.proveedorSeleccionado = ''; 
+    this.mostrarInputProveedor = false; 
   }
 
   cargarRefacciones(idMantenimiento: number): void {
@@ -388,10 +388,10 @@ export class MantenimientoComponent implements OnInit {
     this.apiService.createRefaccion(this.nuevaRefaccion).subscribe({
       next: () => {
         this.cargarRefacciones(this.mantenimientoParaRefacciones!.id_mantenimiento!);
-        this.cargarProveedores(); // 👈 ACTUALIZAR LISTA
+        this.cargarProveedores(); 
         this.nuevaRefaccion = this.getRefaccionVacia();
-        this.proveedorSeleccionado = ''; // 👈 LIMPIAR
-        this.mostrarInputProveedor = false; // 👈 OCULTAR INPUT
+        this.proveedorSeleccionado = '';
+        this.mostrarInputProveedor = false;
         alert('Refacción agregada correctamente');
       },
       error: (error) => {
