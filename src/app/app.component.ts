@@ -2,13 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { AuthService, User } from './services/auth.service';
-import { ToastComponent } from './components/toast/toast.component'; // 👈 AGREGAR
+import { ToastComponent } from './components/toast/toast.component';
 import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ToastComponent], // 👈 AGREGAR ToastComponent
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ToastComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
@@ -17,8 +17,8 @@ export class AppComponent implements OnInit {
   currentRoute: string = '';
   currentUser: User | null = null;
   isAdmin: boolean = false;
-  isMantenimiento: boolean = false; // 👈 AGREGAR
-  isAmaDeLlaves: boolean = false; // 👈 AGREGAR
+  isMantenimiento: boolean = false;
+  isAmaDeLlaves: boolean = false;
 
   // Modo editor secreto (15 clicks)
   clickCount: number = 0;
@@ -40,16 +40,33 @@ export class AppComponent implements OnInit {
     this.authService.currentUser.subscribe(user => {
       this.currentUser = user;
       this.isAdmin = user?.rol === 'admin';
-      this.isMantenimiento = user?.rol === 'mantenimiento'; // 👈 AGREGAR
-      this.isAmaDeLlaves = user?.rol === 'amadellaves'; // 👈 AGREGAR
+      this.isMantenimiento = user?.rol === 'mantenimiento';
+      this.isAmaDeLlaves = user?.rol === 'amadellaves';
     });
   }
 
   ngOnInit(): void {
+    // Ocultar el loading screen cuando Angular está listo
+    this.hideLoadingScreen();
+
     // Verificar si el modo editor estaba activo
     const modoEditor = localStorage.getItem('modoEditor');
     if (modoEditor === 'true') {
       this.modoEditorActivo = true;
+    }
+  }
+
+  // Método para ocultar el loading screen con animación
+  private hideLoadingScreen(): void {
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) {
+      // Agregar clase fade-out para animación suave
+      loadingScreen.classList.add('fade-out');
+      
+      // Remover completamente del DOM después de la animación
+      setTimeout(() => {
+        loadingScreen.remove();
+      }, 500); // 500ms = duración de la animación
     }
   }
 
