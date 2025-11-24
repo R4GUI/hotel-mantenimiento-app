@@ -1,0 +1,158 @@
+<div class="container-fluid mt-4">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col">
+      <h2 class="mb-0">
+        <i class="bi bi-calendar-check"></i> Tickets Para Hoy
+      </h2>
+      <p class="text-muted">
+        Tickets asignados a ti para el día de hoy
+        <span *ngIf="!puedeCompletar" class="badge bg-danger ms-2">
+          <i class="bi bi-clock"></i> Límite de completado: 8:00 PM
+        </span>
+      </p>
+    </div>
+    <div class="col-auto">
+      <button class="btn btn-outline-primary" (click)="cargarTicketsHoy()">
+        <i class="bi bi-arrow-clockwise"></i> Actualizar
+      </button>
+    </div>
+  </div>
+
+  <!-- Advertencia si es después de las 8 PM -->
+  <div class="alert alert-warning" *ngIf="!puedeCompletar">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <strong>Atención:</strong> Ya no puedes completar tickets después de las 8:00 PM. 
+    Los tickets pendientes aparecerán en el reporte del administrador.
+  </div>
+
+  <!-- Tarjetas de Tickets -->
+  <div class="row">
+    <div class="col-md-6 col-lg-4 mb-4" *ngFor="let ticket of tickets">
+      <div class="card shadow-sm h-100 border-start border-4" 
+           [ngClass]="{
+             'border-info': ticket.prioridad === 'Baja',
+             'border-warning': ticket.prioridad === 'Media',
+             'border-orange': ticket.prioridad === 'Alta',
+             'border-danger': ticket.prioridad === 'Urgente'
+           }">
+        <div class="card-header bg-light">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="badge" [ngClass]="getPrioridadBadgeClass(ticket.prioridad)">
+              <i [class]="getPrioridadIcon(ticket.prioridad)"></i>
+              {{ ticket.prioridad }}
+            </span>
+            <span class="badge" [ngClass]="getEstadoBadgeClass(ticket.estado)">
+              {{ ticket.estado }}
+            </span>
+          </div>
+        </div>
+        <div class="card-body">
+          <h6 class="card-subtitle mb-3 text-muted">
+            <i class="bi bi-geo-alt-fill"></i> {{ ticket.area }}
+          </h6>
+          
+          <div class="mb-2">
+            <small class="text-muted">
+              <i class="bi bi-building"></i> {{ ticket.piso }}
+              <span *ngIf="ticket.habitacion"> - {{ ticket.habitacion }}</span>
+            </small>
+          </div>
+
+          <div class="mb-3">
+            <small class="text-muted d-block mb-1">
+              <i class="bi bi-card-text"></i> Problema:
+            </small>
+            <p class="mb-0">{{ ticket.descripcion_problema }}</p>
+          </div>
+
+          <div class="mb-2" *ngIf="ticket.observaciones_mantenimiento">
+            <small class="text-muted d-block mb-1">
+              <i class="bi bi-journal-text"></i> Observaciones:
+            </small>
+            <p class="mb-0 text-muted small">{{ ticket.observaciones_mantenimiento }}</p>
+          </div>
+
+          <hr>
+
+          <div class="d-grid gap-2">
+            <!-- Botón Iniciar (solo si está Pendiente) -->
+            <button class="btn btn-primary btn-sm" 
+                    *ngIf="ticket.estado === 'Pendiente'"
+                    (click)="iniciarTicket(ticket)">
+              <i class="bi bi-play-circle"></i> Iniciar
+            </button>
+
+            <!-- Botones cuando está En Proceso -->
+            <ng-container *ngIf="ticket.estado === 'En Proceso'">
+              <button class="btn btn-outline-secondary btn-sm" 
+                      (click)="abrirModalObservaciones(ticket)">
+                <i class="bi bi-journal-text"></i> Agregar Observaciones
+              </button>
+
+              <button class="btn btn-success btn-sm" 
+                      (click)="completarTicket(ticket)"
+                      [disabled]="!puedeCompletar">
+                <i class="bi bi-check-circle"></i> Completar Ticket
+              </button>
+            </ng-container>
+          </div>
+        </div>
+        <div class="card-footer bg-light text-muted small">
+          <i class="bi bi-clock"></i> Creado: {{ ticket.fecha_creacion | date:'dd/MM/yyyy HH:mm' }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Mensaje si no hay tickets -->
+    <div class="col-12" *ngIf="tickets.length === 0">
+      <div class="alert alert-info text-center">
+        <i class="bi bi-inbox"></i>
+        <h5 class="mt-3">No tienes tickets asignados para hoy</h5>
+        <p class="text-muted mb-0">Los nuevos tickets aparecerán aquí automáticamente</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Observaciones -->
+<div class="modal" [class.show]="mostrarModalObservaciones" [style.display]="mostrarModalObservaciones ? 'block' : 'none'">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-journal-text"></i> Observaciones del Ticket
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="cerrarModalObservaciones()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3" *ngIf="ticketSeleccionado">
+          <p class="text-muted mb-2">
+            <strong>Problema:</strong> {{ ticketSeleccionado.descripcion_problema }}
+          </p>
+          <p class="text-muted mb-3">
+            <strong>Ubicación:</strong> {{ ticketSeleccionado.area }} - {{ ticketSeleccionado.piso }}
+          </p>
+        </div>
+
+        <label class="form-label">
+          <i class="bi bi-pencil-square"></i> Observaciones del trabajo realizado:
+        </label>
+        <textarea class="form-control" 
+                  [(ngModel)]="observaciones" 
+                  rows="5"
+                  placeholder="Describe el trabajo realizado, refacciones usadas, etc."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cerrarModalObservaciones()">
+          <i class="bi bi-x-circle"></i> Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" (click)="guardarObservaciones()">
+          <i class="bi bi-check-circle"></i> Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop fade" [class.show]="mostrarModalObservaciones" *ngIf="mostrarModalObservaciones"></div>

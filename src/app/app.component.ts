@@ -2,12 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { AuthService, User } from './services/auth.service';
+import { ToastComponent } from './components/toast/toast.component'; // 👈 AGREGAR
 import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ToastComponent], // 👈 AGREGAR ToastComponent
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
@@ -16,6 +17,8 @@ export class AppComponent implements OnInit {
   currentRoute: string = '';
   currentUser: User | null = null;
   isAdmin: boolean = false;
+  isMantenimiento: boolean = false; // 👈 AGREGAR
+  isAmaDeLlaves: boolean = false; // 👈 AGREGAR
 
   // Modo editor secreto (15 clicks)
   clickCount: number = 0;
@@ -37,6 +40,8 @@ export class AppComponent implements OnInit {
     this.authService.currentUser.subscribe(user => {
       this.currentUser = user;
       this.isAdmin = user?.rol === 'admin';
+      this.isMantenimiento = user?.rol === 'mantenimiento'; // 👈 AGREGAR
+      this.isAmaDeLlaves = user?.rol === 'amadellaves'; // 👈 AGREGAR
     });
   }
 

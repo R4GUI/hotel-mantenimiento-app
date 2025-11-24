@@ -1,0 +1,12 @@
+.bg-orange {
+  background-color: #ff6b35;
+}
+
+.table th {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.table td {
+  vertical-align: middle;
+}

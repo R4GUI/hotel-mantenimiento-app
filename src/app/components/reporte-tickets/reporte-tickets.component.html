@@ -1,0 +1,72 @@
+<div class="container-fluid mt-4">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col">
+      <h2 class="mb-0">
+        <i class="bi bi-exclamation-triangle-fill text-warning"></i> Reporte de Tickets Incompletos
+      </h2>
+      <p class="text-muted">Tickets que no fueron completados en el día de hoy</p>
+    </div>
+    <div class="col-auto">
+      <button class="btn btn-outline-primary" (click)="cargarTicketsIncompletos()">
+        <i class="bi bi-arrow-clockwise"></i> Actualizar
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="text-center py-5" *ngIf="cargando">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+  </div>
+
+  <!-- Tabla de Tickets Incompletos -->
+  <div class="card shadow-sm" *ngIf="!cargando">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="table-light">
+            <tr>
+              <th>Fecha Creación</th>
+              <th>Área</th>
+              <th>Piso/Habitación</th>
+              <th>Problema</th>
+              <th>Prioridad</th>
+              <th>Asignado a</th>
+              <th>Estado</th>
+              <th>Creado por</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let ticket of ticketsIncompletos">
+              <td>{{ ticket.fecha_creacion | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ ticket.area }}</td>
+              <td>{{ ticket.piso }} - {{ ticket.habitacion || 'N/A' }}</td>
+              <td>{{ ticket.descripcion_problema }}</td>
+              <td>
+                <span class="badge" [ngClass]="getPrioridadBadgeClass(ticket.prioridad)">
+                  {{ ticket.prioridad }}
+                </span>
+              </td>
+              <td>{{ ticket.asignado_a }}</td>
+              <td>
+                <span class="badge" [ngClass]="getEstadoBadgeClass(ticket.estado)">
+                  {{ ticket.estado }}
+                </span>
+              </td>
+              <td>{{ ticket.creado_por }}</td>
+            </tr>
+            <tr *ngIf="ticketsIncompletos.length === 0">
+              <td colspan="8" class="text-center text-success py-4">
+                <i class="bi bi-check-circle-fill fs-1"></i>
+                <h5 class="mt-3">¡Excelente!</h5>
+                <p class="text-muted mb-0">No hay tickets incompletos hoy</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

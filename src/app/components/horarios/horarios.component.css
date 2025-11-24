@@ -1,0 +1,11 @@
+.modal.show {
+  display: block;
+}
+
+.table th {
+  font-weight: 600;
+}
+
+.table td {
+  vertical-align: middle;
+}

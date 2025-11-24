@@ -1,0 +1,250 @@
+<div class="container-fluid mt-4">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col">
+      <h2 class="mb-0">
+        <i class="bi bi-calendar3"></i> Gestión de Horarios
+      </h2>
+      <p class="text-muted">Administra la disponibilidad del personal de mantenimiento</p>
+    </div>
+    <div class="col-auto">
+      <button class="btn btn-primary me-2" (click)="abrirModal()">
+        <i class="bi bi-plus-circle"></i> Nuevo Horario
+      </button>
+      <button class="btn btn-outline-primary" (click)="abrirModalSemana()">
+        <i class="bi bi-calendar-week"></i> Crear Semana
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">
+            <i class="bi bi-calendar"></i> Fecha
+          </label>
+          <input type="date" 
+                 class="form-control" 
+                 [(ngModel)]="fechaFiltro">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">
+            <i class="bi bi-person"></i> Empleado
+          </label>
+          <select class="form-select" [(ngModel)]="empleadoFiltro">
+            <option value="">Todos</option>
+            <option *ngFor="let emp of empleadosMantenimiento" [value]="emp.username">
+              {{ emp.nombre }}
+            </option>
+          </select>
+        </div>
+
+        <div class="col-md-4 d-flex align-items-end">
+          <button class="btn btn-primary me-2" (click)="aplicarFiltros()">
+            <i class="bi bi-search"></i> Buscar
+          </button>
+          <button class="btn btn-outline-secondary" (click)="limpiarFiltros()">
+            <i class="bi bi-x-circle"></i> Limpiar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de Horarios -->
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="table-light">
+            <tr>
+              <th>Empleado</th>
+              <th>Fecha</th>
+              <th>Estado</th>
+              <th>Motivo</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let horario of horarios">
+              <td>{{ getNombreEmpleado(horario.username) }}</td>
+              <td>{{ horario.fecha | date:'dd/MM/yyyy' }}</td>
+              <td>
+                <span class="badge" [ngClass]="horario.disponible ? 'bg-success' : 'bg-danger'">
+                  <i [class]="horario.disponible ? 'bi bi-check-circle' : 'bi bi-x-circle'"></i>
+                  {{ horario.disponible ? 'Disponible' : 'No Disponible' }}
+                </span>
+              </td>
+              <td>{{ horario.motivo || '-' }}</td>
+              <td>
+                <button class="btn btn-outline-primary btn-sm me-1" 
+                        (click)="editarHorario(horario)">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-outline-danger btn-sm" 
+                        (click)="eliminarHorario(horario.id_horario!)">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="horarios.length === 0">
+              <td colspan="5" class="text-center text-muted py-4">
+                No hay horarios registrados para esta fecha
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Crear/Editar Horario -->
+<div class="modal" [class.show]="mostrarModal" [style.display]="mostrarModal ? 'block' : 'none'">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-calendar3"></i> {{ modoEdicion ? 'Editar' : 'Nuevo' }} Horario
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="cerrarModal()"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label class="form-label">
+              <i class="bi bi-person"></i> Empleado *
+            </label>
+            <select class="form-select" 
+                    [(ngModel)]="horarioActual.username" 
+                    name="username"
+                    [disabled]="modoEdicion"
+                    required>
+              <option value="">Seleccionar empleado...</option>
+              <option *ngFor="let emp of empleadosMantenimiento" [value]="emp.username">
+                {{ emp.nombre }}
+              </option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">
+              <i class="bi bi-calendar"></i> Fecha *
+            </label>
+            <input type="date" 
+                   class="form-control" 
+                   [(ngModel)]="horarioActual.fecha" 
+                   name="fecha"
+                   required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">
+              <i class="bi bi-check-circle"></i> Disponibilidad
+            </label>
+            <select class="form-select" 
+                    [(ngModel)]="horarioActual.disponible" 
+                    name="disponible">
+              <option [ngValue]="true">Disponible</option>
+              <option [ngValue]="false">No Disponible</option>
+            </select>
+          </div>
+
+          <div class="mb-3" *ngIf="!horarioActual.disponible">
+            <label class="form-label">
+              <i class="bi bi-info-circle"></i> Motivo
+            </label>
+            <input type="text" 
+                   class="form-control" 
+                   [(ngModel)]="horarioActual.motivo" 
+                   name="motivo"
+                   placeholder="Ej: Día libre, Vacaciones, etc.">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cerrarModal()">
+          <i class="bi bi-x-circle"></i> Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" (click)="guardarHorario()">
+          <i class="bi bi-check-circle"></i> Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Crear Horarios de Semana -->
+<div class="modal" [class.show]="mostrarModalSemana" [style.display]="mostrarModalSemana ? 'block' : 'none'">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-calendar-week"></i> Crear Horarios de Semana
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="cerrarModalSemana()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-4">
+          <label class="form-label">
+            <i class="bi bi-calendar"></i> Fecha de Inicio de Semana *
+          </label>
+          <input type="date" 
+                 class="form-control" 
+                 [(ngModel)]="fechaInicioSemana">
+          <small class="text-muted">Se crearán horarios para 7 días a partir de esta fecha</small>
+        </div>
+
+        <h6 class="mb-3">Disponibilidad de Empleados:</h6>
+
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead class="table-light">
+              <tr>
+                <th>Empleado</th>
+                <th>Disponible</th>
+                <th>Motivo (si no está disponible)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let emp of empleadosMantenimiento">
+                <td>{{ emp.nombre }}</td>
+                <td>
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" 
+                           type="checkbox" 
+                           [(ngModel)]="emp.disponible"
+                           [id]="'check-' + emp.username">
+                    <label class="form-check-label" [for]="'check-' + emp.username">
+                      {{ emp.disponible ? 'Sí' : 'No' }}
+                    </label>
+                  </div>
+                </td>
+                <td>
+                  <input type="text" 
+                         class="form-control form-control-sm" 
+                         [(ngModel)]="emp.motivo"
+                         [disabled]="emp.disponible"
+                         placeholder="Día libre, vacaciones...">
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cerrarModalSemana()">
+          <i class="bi bi-x-circle"></i> Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" (click)="crearHorariosSemana()">
+          <i class="bi bi-check-circle"></i> Crear Horarios
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop fade" [class.show]="mostrarModal || mostrarModalSemana" *ngIf="mostrarModal || mostrarModalSemana"></div>

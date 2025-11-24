@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Area, Tipo, Equipo, Mantenimiento, Refaccion } from '../models/interfaces';
+import { Area, Tipo, Equipo, Mantenimiento, Refaccion, Ticket, Horario } from '../models/interfaces';
 
 @Injectable({
   providedIn: 'root'
@@ -117,5 +117,64 @@ export class ApiService {
 
   verifySession(username: string): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/auth/verify`, { username });
+  }
+    // 👇 NUEVOS MÉTODOS PARA TICKETS
+
+  // Tickets
+  getTickets(): Observable<Ticket[]> {
+    return this.http.get<Ticket[]>(`${this.apiUrl}/tickets`);
+  }
+
+  getTicketsByResponsable(username: string): Observable<Ticket[]> {
+    return this.http.get<Ticket[]>(`${this.apiUrl}/tickets/responsable/${username}`);
+  }
+
+  getTicketsHoy(): Observable<Ticket[]> {
+    return this.http.get<Ticket[]>(`${this.apiUrl}/tickets/hoy`);
+  }
+
+  getTicketsIncompletos(): Observable<Ticket[]> {
+    return this.http.get<Ticket[]>(`${this.apiUrl}/tickets/incompletos/reporte`);
+  }
+
+  createTicket(ticket: Ticket): Observable<Ticket> {
+    return this.http.post<Ticket>(`${this.apiUrl}/tickets`, ticket);
+  }
+
+  updateTicket(id: string, ticket: Partial<Ticket>): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/tickets/${id}`, ticket);
+  }
+
+  deleteTicket(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/tickets/${id}`);
+  }
+
+  // Horarios
+  getHorarios(): Observable<Horario[]> {
+    return this.http.get<Horario[]>(`${this.apiUrl}/horarios`);
+  }
+
+  getHorariosByFecha(fecha: string): Observable<Horario[]> {
+    return this.http.get<Horario[]>(`${this.apiUrl}/horarios/fecha/${fecha}`);
+  }
+
+  getHorariosByEmpleado(username: string): Observable<Horario[]> {
+    return this.http.get<Horario[]>(`${this.apiUrl}/horarios/empleado/${username}`);
+  }
+
+  createHorario(horario: Horario): Observable<Horario> {
+    return this.http.post<Horario>(`${this.apiUrl}/horarios`, horario);
+  }
+
+  createHorariosSemana(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/horarios/semana`, data);
+  }
+
+  updateHorario(id: string, horario: Partial<Horario>): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/horarios/${id}`, horario);
+  }
+
+  deleteHorario(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/horarios/${id}`);
   }
 }

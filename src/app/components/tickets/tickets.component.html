@@ -1,0 +1,144 @@
+<div class="container-fluid mt-4">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col">
+      <h2 class="mb-0">
+        <i class="bi bi-ticket-perforated"></i> Mis Tickets
+      </h2>
+      <p class="text-muted">Reporta problemas para que el equipo de mantenimiento los resuelva</p>
+    </div>
+    <div class="col-auto">
+      <button class="btn btn-primary" (click)="abrirModal()">
+        <i class="bi bi-plus-circle"></i> Nuevo Ticket
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabla de Tickets -->
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="table-light">
+            <tr>
+              <th>Fecha</th>
+              <th>Área</th>
+              <th>Piso/Habitación</th>
+              <th>Problema</th>
+              <th>Prioridad</th>
+              <th>Asignado a</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let ticket of tickets">
+              <td>{{ ticket.fecha_creacion | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ ticket.area }}</td>
+              <td>{{ ticket.piso }} - {{ ticket.habitacion || 'N/A' }}</td>
+              <td>{{ ticket.descripcion_problema }}</td>
+              <td>
+                <span class="badge" [ngClass]="getPrioridadBadgeClass(ticket.prioridad)">
+                  {{ ticket.prioridad }}
+                </span>
+              </td>
+              <td>{{ ticket.asignado_a }}</td>
+              <td>
+                <span class="badge" [ngClass]="getEstadoBadgeClass(ticket.estado)">
+                  {{ ticket.estado }}
+                </span>
+              </td>
+            </tr>
+            <tr *ngIf="tickets.length === 0">
+              <td colspan="7" class="text-center text-muted py-4">
+                No has creado ningún ticket aún
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Crear Ticket -->
+<div class="modal" [class.show]="mostrarModal" [style.display]="mostrarModal ? 'block' : 'none'">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-plus-circle"></i> Nuevo Ticket de Mantenimiento
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="cerrarModal()"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">
+                <i class="bi bi-geo-alt-fill text-primary"></i> Área *
+              </label>
+              <select class="form-select" [(ngModel)]="nuevoTicket.area" name="area" required>
+                <option value="">Seleccionar área...</option>
+                <option *ngFor="let area of areas" [value]="area">{{ area }}</option>
+              </select>
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">
+                <i class="bi bi-building text-primary"></i> Piso *
+              </label>
+              <select class="form-select" [(ngModel)]="nuevoTicket.piso" name="piso" required>
+                <option value="">Seleccionar piso...</option>
+                <option *ngFor="let piso of pisos" [value]="piso">{{ piso }}</option>
+              </select>
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">
+                <i class="bi bi-door-closed text-primary"></i> Habitación / Ubicación
+              </label>
+              <input type="text" 
+                     class="form-control" 
+                     [(ngModel)]="nuevoTicket.habitacion" 
+                     name="habitacion"
+                     placeholder="Ej: 301, Área común, etc.">
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">
+                <i class="bi bi-exclamation-triangle text-primary"></i> Prioridad *
+              </label>
+              <select class="form-select" [(ngModel)]="nuevoTicket.prioridad" name="prioridad" required>
+                <option *ngFor="let prioridad of prioridades" [value]="prioridad">
+                  {{ prioridad }}
+                </option>
+              </select>
+            </div>
+
+            <div class="col-12 mb-3">
+              <label class="form-label">
+                <i class="bi bi-card-text text-primary"></i> Descripción del Problema *
+              </label>
+              <textarea class="form-control" 
+                        [(ngModel)]="nuevoTicket.descripcion_problema" 
+                        name="descripcion"
+                        rows="4"
+                        placeholder="Describe detalladamente el problema..."
+                        required></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cerrarModal()">
+          <i class="bi bi-x-circle"></i> Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" (click)="crearTicket()">
+          <i class="bi bi-check-circle"></i> Crear Ticket
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop fade" [class.show]="mostrarModal" *ngIf="mostrarModal"></div>
